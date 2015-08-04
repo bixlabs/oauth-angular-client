@@ -413,3 +413,50 @@ If the access token request is valid and authorized, the authorization server is
   "expires_in":3600,
   "example_parameter":"example_value"
 }
+
+
+Using Implicit Grant with AngularJS
+===================================
+
+First, we have to add authentication redirection to the resource owner:
+
+ angular.module('app')
+   .controller('MainCtrl', function ($$scope) {
+     $scope.login=function() {
+     	var client_id="your client id";
+     	var scope="email";
+      	var redirect_uri="http://localhost:9000";
+      	var response_type="token";
+      	var url="https://accounts.google.com/o/oauth2/auth?scope="+scope+"&client_id="+client_id+"&redirect_uri="+redirect_uri+
+      	"&response_type="+response_type;
+     	window.location.replace(url);
+    };
+});
+
+When the authentication is succesful, we have to add route configuration in order to get and parse the authentication token:
+
+     angular
+       .module('app', [
+       ])
+       .config(function ($routeProvider) {
+         $routeProvider
+           .when('/access_token=:accessToken', {
+             template: '',
+             controller: function ($location,$rootScope) {
+               var hash = $location.path().substr(1);
+                          var splitted = hash.split('&');
+               var params = {};
+ 
+           for (var i = 0; i < splitted.length; i++) {
+             var param  = splitted[i].split('=');
+             var key    = param[0];
+             var value  = param[1];
+             params[key] = value;
+             $rootScope.accesstoken=params;
+           }
+           $location.path("/about");
+         }
+       })
+     });
+     
+The redirect url will look like http://localhost:9000#access_token=….
