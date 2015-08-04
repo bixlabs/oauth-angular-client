@@ -88,7 +88,7 @@ It is the most commonly used because it is optimized for server-side application
  
 The client constructs the request URI by adding the following parameters to the query component of the authorization endpoint URI:
 
-Example URL: https://accounts.google.com/o/oauth2/auth?
+Example URI: https://accounts.google.com/o/oauth2/auth?
 
 QueryString Parameters:
 
@@ -134,6 +134,22 @@ code: The authorization code received from the authorization server.
 client_id: the application's client ID
 
 redirect_uri: where the service redirects the user-agent after an authorization code is granted
+
+Example URI: https://accounts.google.com/o/oauth2/token?grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA&client_id=1046506418225-dgpu1935ji53o196us39t959oknt7s2h.apps.googleusercontent.com&redirect_uri=http://localhost:9000/
+
+D - Access Token Response
+
+If the access token request is valid and authorized, the authorization server issues an access token and optional refresh token.
+
+An example successful response is:
+
+{
+  "access_token":"2YotnFZFEjr1zCsicMWpAA",
+  "token_type":"example",
+  "expires_in":3600,
+  "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
+  "example_parameter":"example_value"
+}
 
 
 
