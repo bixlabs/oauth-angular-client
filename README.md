@@ -420,18 +420,18 @@ Using Implicit Grant with AngularJS
 
 First, we have to add authentication redirection to the resource owner:
 
- angular.module('app')
-   .controller('MainCtrl', function ($$scope) {
-     $scope.login=function() {
-     	var client_id="your client id";
-     	var scope="email";
-      	var redirect_uri="http://localhost:9000";
-      	var response_type="token";
-      	var url="https://accounts.google.com/o/oauth2/auth?scope="+scope+"&client_id="+client_id+"&redirect_uri="+redirect_uri+
-      	"&response_type="+response_type;
-     	window.location.replace(url);
-    };
-});
+     angular.module('app')
+       .controller('MainCtrl', function ($$scope) {
+         $scope.login=function() {
+         	var client_id="your client id";
+         	var scope="email";
+          	var redirect_uri="http://localhost:9000";
+          	var response_type="token";
+          	var url="https://accounts.google.com/o/oauth2/auth?scope="+scope+"&client_id="+client_id+"&redirect_uri="+redirect_uri+
+          	"&response_type="+response_type;
+         	window.location.replace(url);
+        };
+    });
 
 When the authentication is succesful, we have to add route configuration in order to get and parse the authentication token:
 
