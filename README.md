@@ -268,7 +268,6 @@ expires_in: The lifetime in seconds of the access token.
 scope: Optinal if identical to the scope requested by the client
 
 state (Optional): It is required if the "state" parameter was present in the client authorization request.  
-The exact value received from the client.
 
 C - Redirection URI with Access Token in Fragment
 -------------------------------------------------
@@ -304,3 +303,113 @@ The authorization server should take special care when enabling this grant type 
 This grant type is suitable for clients capable of obtaining the resource owner's credentials (username and password, typically using an interactive form).  It is also used to migrate existing clients using direct authentication schemes such as HTTP Basic or Digest authentication to OAuth by converting the stored credentials to an access token.
 
 The user provides their service credentials (username and password) directly to the application, which uses the credentials to obtain an access token from the service.
+
+     +----------+
+     | Resource |
+     |  Owner   |
+     |          |
+     +----------+
+          v
+          |    Resource Owner
+         (A) Password Credentials
+          |
+          v
+     +---------+                                  +---------------+
+     |         |>--(B)---- Resource Owner ------->|               |
+     |         |         Password Credentials     | Authorization |
+     | Client  |                                  |     Server    |
+     |         |<--(C)---- Access Token ---------<|               |
+     |         |    (w/ Optional Refresh Token)   |               |
+     +---------+                                  +---------------+
+
+
+After the user gives their credentials to the application, the application will then request an access token from the authorization server.
+
+Authorization Request and Response
+----------------------------------
+
+The client obtains the credentials by some method. 
+The client MUST discard the credentials once an access token has been obtained.
+
+Access Token Request
+--------------------
+
+The client makes a request to the token endpoint by adding the following parameters:
+
+grant_type: "password"
+
+scope:
+
+username: The resource owner username.
+
+password: The resource owner password.
+
+client_id:
+
+Example URI: https://accounts.google.com/o/oauth2/auth?grant_type=password&username=johndoe&password=A3ddj3w&client_id= 1046506418225-dgpu1935ji53o196us39t959oknt7s2h.apps.googleusercontent.com
+
+Access Token Response
+---------------------
+
+If the access token request is valid and authorized, the authorization server issues an access token and optional refresh token.
+
+access_token: The access token issued by the authorization server.
+
+refresh_token: The refresh token issued by the authorization server.
+
+token_type: The type of the token issued. Value is case insensitive.
+
+expires_in: The lifetime in seconds of the access token.
+
+
+{
+       "access_token":"2YotnFZFEjr1zCsicMWpAA",
+       "token_type":"example",
+       "expires_in":3600,
+       "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
+       "example_parameter":"example_value"
+     }
+
+Client Credentials Grant
+========================
+
+The client credentials grant type provides an application a way to access its own service account. 
+
+The client can request an access token using only its client credentials (or other supported means of authentication) when the client is requesting access to the protected resources under its control, or those of another resource owner that have been previously arranged with the authorization server.
+
+The client credentials grant type MUST only be used by confidential
+   clients.
+
+     +---------+                                  +---------------+
+     |         |                                  |               |
+     |         |>--(A)- Client Authentication --->| Authorization |
+     | Client  |                                  |     Server    |
+     |         |<--(B)---- Access Token ---------<|               |
+     |         |                                  |               |
+     +---------+                                  +---------------+
+
+Authorization Request and Response
+----------------------------------
+
+Since the client authentication is used as the authorization grant, no additional authorization request is needed.
+
+Access Token Request
+--------------------
+
+The client makes a request to the token endpoint by adding the following parameters:
+
+grant_type: "client_credentials"
+
+scope:
+
+Access Token Response
+---------------------
+
+If the access token request is valid and authorized, the authorization server issues an access token.
+
+{
+  "access_token":"2YotnFZFEjr1zCsicMWpAA",
+  "token_type":"example",
+  "expires_in":3600,
+  "example_parameter":"example_value"
+}
