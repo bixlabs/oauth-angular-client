@@ -33,7 +33,9 @@ Once your application is registered, the service will issue "client credentials"
 
 The Client ID is a publicly exposed string that is used by the service API to identify the application, and is also used to build authorization URLs that are presented to users. 
 
-The Client Secret is used to authenticate the identity of the application to the service API when the application requests to access a user's account, and must be kept private between the application and the API.
+The Client Secret is used to authenticate the identity of the application to the service API when the application requests to access a user's account, and must be kept private between the application and the API, if a deployed app cannot keep the secret confidential, such as Javascript or native apps, then the secret is not used.
+
+The service will only redirect users to a registered URI, which helps prevent some attacks. Any HTTP redirect URIs must be protected with TLS security, so the service will only redirect to URIs beginning with "https". This prevents tokens from being intercepted during the authorization process.
 
 Obtaining Authorization
 
@@ -133,9 +135,11 @@ code: The authorization code received from the authorization server.
 
 client_id: the application's client ID
 
+client_secret: the application's client secret
+
 redirect_uri: where the service redirects the user-agent after an authorization code is granted
 
-Example URI: https://accounts.google.com/o/oauth2/token?grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA&client_id=1046506418225-dgpu1935ji53o196us39t959oknt7s2h.apps.googleusercontent.com&redirect_uri=http://localhost:9000/
+Example URI: https://accounts.google.com/o/oauth2/token?grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA&client_id=1046506418225-dgpu1935ji53o196us39t959oknt7s2h.apps.googleusercontent.com&client_secret=secret&redirect_uri=http://localhost:9000/
 
 D - Access Token Response
 
@@ -145,14 +149,109 @@ An example successful response is:
 
 {
   "access_token":"2YotnFZFEjr1zCsicMWpAA",
-  "token_type":"example",
+  "token_type":"bearer",
   "expires_in":3600,
-  "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA",
-  "example_parameter":"example_value"
+  "refresh_token":"tGzv3JOkF0XG5Qx2TlKWIA"
 }
 
+Implicit Grant
 
+An implicit authorization grant is similar to an authorization code grant, except the access token is returned to the client application already after the user has finished the authorization. The access token is thus returned when the user agent is redirected to the redirect URI (it does not support the issuance of refresh tokens).
 
- 
-   
-   
+This of course means that the access token is accessible in the user agent, or native application participating in the implicit authorization grant. The access token is not stored securely on a web server.
+
+Furthermore, the client application can only send its client ID to the authorization server. If the client were to send its client secret too, the client secret would have to be stored in the user agent or native application too. That would make it vulnerable to hacking.
+
+The implicit grant type is used for mobile apps and web applications, where the client secret confidentiality is not guaranteed.
+
+The implicit grant type does not include client authentication, and relies on the presence of the resource owner and the registration of the redirection URI.  Because the access token is encoded into the redirection URI, it may be exposed to the resource owner and other applications residing on the same device.
+
+     +----------+
+     | Resource |
+     |  Owner   |
+     |          |
+     +----------+
+          ^
+          |
+         (B)
+     +----|-----+          Client Identifier     +---------------+
+     |         -+----(A)-- & Redirection URI --->|               |
+     |  User-   |                                | Authorization |
+     |  Agent  -|----(B)-- User authenticates -->|     Server    |
+     |          |                                |               |
+     |          |<---(C)--- Redirection URI ----<|               |
+     |          |          with Access Token     +---------------+
+     |          |            in Fragment
+     |          |                                +---------------+
+     |          |----(D)--- Redirection URI ---->|   Web-Hosted  |
+     |          |          without Fragment      |     Client    |
+     |          |                                |    Resource   |
+     |     (F)  |<---(E)------- Script ---------<|               |
+     |          |                                +---------------+
+     +-|--------+
+       |    |
+      (A)  (G) Access Token
+       |    |
+       ^    v
+     +---------+
+     |         |
+     |  Client |
+     |         |
+     +---------+
+
+   Note: The lines illustrating steps (A) and (B) are broken into two
+   parts as they pass through the user-agent.
+
+The implicit grant flow basically works as follows: the user is asked to authorize the application, then the authorization server passes the access token back to the user-agent, which passes it to the application
+
+A - Authorization Request
+
+The client constructs the request URI by adding the following parameters to the query component of the authorization endpoint URI, just like in the authorization code grant above, except it is now requesting a token instead of a code :
+
+Example URI: https://accounts.google.com/o/oauth2/auth?
+
+QueryString Parameters:
+
+client_id: the application's client ID
+
+redirect_uri: where the service redirects the user-agent after an authorization code is granted
+
+response_type:token specifies that your application is requesting an authorization code grant
+
+scope: specifies the level of access that the application is requesting
+
+Example URI:
+https://accounts.google.com/o/oauth2/auth?client_id=1046506418225-dgpu1935ji53o196us39t959oknt7s2h.apps.googleusercontent.com&redirect_uri=http://localhost:9000/&response_type=token&scope=read
+
+A' - User Authorizes Application
+
+When the user clicks the link, they must first log in to the service, to authenticate their identity. Then they will be prompted by the service to authorize or deny the application access to their account.
+
+B - Access Token Response
+
+If the resource owner grants the access request, the authorization server issues an access token and delivers it to the client by adding the following parameters to the fragment component of the redirection URI:
+
+access_token: The access token issued by the authorization server.
+
+token_type: The type of the token issued. Value is case insensitive.
+
+expires_in: The lifetime in seconds of the access token.
+
+scope: Optinal if identical to the scope requested by the client
+
+state (Optional): It is required if the "state" parameter was present in the client authorization request.  
+The exact value received from the client.
+
+C - Redirection URI with Access Token in Fragment
+
+The service redirects the user-agent to the application redirect URI to a redirect URI like this one:
+
+http://localhost:9000/callback#token=2YotnFZFEjr1zCsicMWpAA
+
+D - Redirection URI without fragment
+
+The user-agent follows the redirect URI but retains the access token.
+
+E - Script
+
+The application returns a webpage that contains a script that can extract the access token from the full redirect URI that the user-agent has retained.
