@@ -1,5 +1,9 @@
+
 # oauth-angular-client
 OAuth Angular Client Proof of Concept which uses an indirect approach.
+
+What is OAuth 2.0
+-----
 
 OAuth 2.0 is the next evolution of the OAuth protocol which was originally created in late 2006. 
 
@@ -9,7 +13,12 @@ OAuth 2 is an authorization framework that enables applications to obtain limite
 
 It works by delegating user authentication to the service that hosts the user account, and authorizing third-party applications to access the user account.
 
+
+
+Roles
+-----
 OAuth defines four roles:
+
   * Resource Owner
   * Client
   * Resource Server
@@ -31,6 +40,9 @@ Before using OAuth with your application, you must register your application wit
 
 Once your application is registered, the service will issue "client credentials" in the form of a client identifier and a client secret. 
 
+Client ID, Client Secret and Redirect URI
+-----------------------------------------
+
 The Client ID is a publicly exposed string that is used by the service API to identify the application, and is also used to build authorization URLs that are presented to users. 
 
 The Client Secret is used to authenticate the identity of the application to the service API when the application requests to access a user's account, and must be kept private between the application and the API, if a deployed app cannot keep the secret confidential, such as Javascript or native apps, then the secret is not used.
@@ -38,9 +50,13 @@ The Client Secret is used to authenticate the identity of the application to the
 The service will only redirect users to a registered URI, which helps prevent some attacks. Any HTTP redirect URIs must be protected with TLS security, so the service will only redirect to URIs beginning with "https". This prevents tokens from being intercepted during the authorization process.
 
 Obtaining Authorization
+-----------------------
 
 To request an access token, the client obtains authorization from the resource owner.  
 The authorization is expressed in the form of an authorization grant, which the client uses to request the access token.
+
+Grant Types
+-----------
 
 OAuth 2 defines four grant types, each of which is useful in different cases:
 
@@ -53,6 +69,7 @@ OAuth 2 defines four grant types, each of which is useful in different cases:
   * Client Credentials: used with Applications API access
 
 Authorization Code Grant
+========================
 
 The authorization code grant type is used to obtain both access tokens and refresh tokens and is optimized for confidential clients.
 It is the most commonly used because it is optimized for server-side applications, where source code is not publicly exposed, and Client Secret confidentiality can be maintained.
@@ -86,7 +103,10 @@ It is the most commonly used because it is optimized for server-side application
    Note: The lines illustrating steps (A), (B), and (C) are broken into
    two parts as they pass through the user-agent.
  
- A - Client Identifier & Redirection URI
+
+A - Client Identifier & Redirection URI
+---------------------------------------
+
  
 The client constructs the request URI by adding the following parameters to the query component of the authorization endpoint URI:
 
@@ -106,10 +126,12 @@ Example URI:
 https://accounts.google.com/o/oauth2/auth?client_id=1046506418225-dgpu1935ji53o196us39t959oknt7s2h.apps.googleusercontent.com&redirect_uri=http://localhost:9000/&response_type=code&scope=read
 
 A' - User Authorizes Application
+--------------------------------
 
 When the user clicks the link, they must first log in to the service, to authenticate their identity. Then they will be prompted by the service to authorize or deny the application access to their account.
 
 B - Authorization Response
+--------------------------
 
 If the resource owner grants the access request, the authorization server issues an authorization code and delivers it to the client by adding the following parameters to the query component of the redirection URI
 
@@ -122,6 +144,7 @@ Example URI:
 http://localhost:9000/callback?code=SplxlOBeZQQYbYS6WxSbIA
 
 C - Access Token Request
+------------------------
 
 The client makes a request to the API token endpoint passing the authorization code along with authentication details, including the client secret. These are the passed parameters:
 
@@ -142,6 +165,7 @@ redirect_uri: where the service redirects the user-agent after an authorization 
 Example URI: https://accounts.google.com/o/oauth2/token?grant_type=authorization_code&code=SplxlOBeZQQYbYS6WxSbIA&client_id=1046506418225-dgpu1935ji53o196us39t959oknt7s2h.apps.googleusercontent.com&client_secret=secret&redirect_uri=http://localhost:9000/
 
 D - Access Token Response
+-------------------------
 
 If the access token request is valid and authorized, the authorization server issues an access token and optional refresh token.
 
@@ -155,6 +179,7 @@ An example successful response is:
 }
 
 Implicit Grant
+==============
 
 An implicit authorization grant is similar to an authorization code grant, except the access token is returned to the client application already after the user has finished the authorization. The access token is thus returned when the user agent is redirected to the redirect URI (it does not support the issuance of refresh tokens).
 
@@ -205,6 +230,7 @@ The implicit grant type does not include client authentication, and relies on th
 The implicit grant flow basically works as follows: the user is asked to authorize the application, then the authorization server passes the access token back to the user-agent, which passes it to the application
 
 A - Authorization Request
+-------------------------
 
 The client constructs the request URI by adding the following parameters to the query component of the authorization endpoint URI, just like in the authorization code grant above, except it is now requesting a token instead of a code :
 
@@ -224,10 +250,12 @@ Example URI:
 https://accounts.google.com/o/oauth2/auth?client_id=1046506418225-dgpu1935ji53o196us39t959oknt7s2h.apps.googleusercontent.com&redirect_uri=http://localhost:9000/&response_type=token&scope=read
 
 A' - User Authorizes Application
+--------------------------------
 
 When the user clicks the link, they must first log in to the service, to authenticate their identity. Then they will be prompted by the service to authorize or deny the application access to their account.
 
 B - Access Token Response
+-------------------------
 
 If the resource owner grants the access request, the authorization server issues an access token and delivers it to the client by adding the following parameters to the fragment component of the redirection URI:
 
@@ -243,15 +271,36 @@ state (Optional): It is required if the "state" parameter was present in the cli
 The exact value received from the client.
 
 C - Redirection URI with Access Token in Fragment
+-------------------------------------------------
 
 The service redirects the user-agent to the application redirect URI to a redirect URI like this one:
 
 http://localhost:9000/callback#token=2YotnFZFEjr1zCsicMWpAA
 
 D - Redirection URI without fragment
+------------------------------------
 
 The user-agent follows the redirect URI but retains the access token.
 
 E - Script
+----------
 
 The application returns a webpage that contains a script that can extract the access token from the full redirect URI that the user-agent has retained.
+
+G - Access Token passed to Client
+----------
+
+The user-agent executes the provided script and passes the extracted access token to the application.
+
+Now the application is authorized! It may use the token to access the user's account via the service API
+
+Resource Owner Password Credentials Grant
+=========================================
+
+The resource owner password credentials grant type is suitable in cases where the resource owner has a trust relationship with the client, such as the device operating system or a highly privileged application.  
+
+The authorization server should take special care when enabling this grant type and only allow it when other flows are not viable.
+
+This grant type is suitable for clients capable of obtaining the resource owner's credentials (username and password, typically using an interactive form).  It is also used to migrate existing clients using direct authentication schemes such as HTTP Basic or Digest authentication to OAuth by converting the stored credentials to an access token.
+
+The user provides their service credentials (username and password) directly to the application, which uses the credentials to obtain an access token from the service.
