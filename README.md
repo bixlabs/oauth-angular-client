@@ -414,6 +414,49 @@ If the access token request is valid and authorized, the authorization server is
   "example_parameter":"example_value"
 }
 
+Access Tokens in Facebook
+=========================
+
+Expiration and Extending Tokens
+-------------------------------
+
+Facebook's official SDKs manage the lifetime of tokens for you. When using iOS, Android or our JavaScript SDK, the SDK will handle making sure that tokens are refreshed before they expire.
+
+Native mobile applications using Facebook's SDKs will get long-lived access tokens, good for about 60 days. These tokens will be refreshed once per day when the person using your app makes a request to Facebook's servers. If no requests are made, the token will expire after about 60 days and the person will have to go through the login flow again to get a new token.
+
+Access tokens on the web often have a lifetime of about two hours, but will automatically be refreshed when required. If you want to use access tokens for longer-lived web apps, especially server side, you need to generate a long-lived token. A long-lived token generally lasts about 60 days.
+
+Here are the steps that you need to take to generate a long-lived token:
+
+Start with a short-lived token generated on a client and ship it back to your server.
+
+Use the user token, your app ID and app secret to make the following call from your server to Facebook's servers:
+
+GET /oauth/access_token?  
+    grant_type=fb_exchange_token&           
+    client_id={app-id}&
+    client_secret={app-secret}&
+    fb_exchange_token={short-lived-token} 
+    
+Make this call from your **server**, not a client. The app secret is included in this API call, so you should never actually make the request client-side. Instead implement server-side code that makes the request, then pass the response containing the long-lived token back to your client-side code. This will be a different string than the original token, so if you're storing these tokens, replace the old one.
+
+Once you've retrieved the long-lived token, you can use it from your server or ship it back down to the client to use there.
+
+Refreshing Long-Lived Tokens
+----------------------------
+
+Even the long-lived access token will eventually expire. At any point, you can generate a new long-lived token by sending the person back to the login flow used by your web app - note that **the person will not actually need to login again**, they have already authorized your app, so **they will immediately redirect back to your app** from the login flow with a refreshed token - how this appears to the person will vary based on the type of login flow that you are using, for example if you are using the JavaScript SDK, this will take place in the background, if you are using a server-side flow, the browser will quickly redirect to the Login Dialog and then automatically and immediately back to your app again.
+
+After doing the above you will obtain a new short-lived token and then you need to perform the same exchange for a long-lived token as above.
+
+In some cases, this newer long-lived token might be identical to the previous one, but we can't guarantee it and your app shouldn't depend upon it.
+
+With the iOS and Android SDKs, long-lived tokens are used by default and should automatically be refreshed.
+
+
+
+
+
 
 Using Implicit Grant with AngularJS
 ===================================
