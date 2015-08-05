@@ -462,7 +462,7 @@ Using Implicit Grant with AngularJS
 ===================================
 
 First, we have to add authentication redirection to the resource owner:
-
+```javascript
      angular.module('app')
        .controller('MainCtrl', function ($$scope) {
          $scope.login=function() {
@@ -475,9 +475,9 @@ First, we have to add authentication redirection to the resource owner:
          	window.location.replace(url);
         };
     });
-
+```
 When the authentication is succesful, we have to add route configuration in order to get and parse the authentication token:
-
+```javascript
      angular
        .module('app', [
        ])
@@ -502,4 +502,5 @@ When the authentication is succesful, we have to add route configuration in orde
        })
      });
      
+     ```
 The redirect url will look like http://localhost:9000#access_token=….
